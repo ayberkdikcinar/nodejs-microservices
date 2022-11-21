@@ -1,0 +1,4 @@
+skaffold.exe
+*/node_modules
+skaffold.yaml
+infra/k8s/jwt-secret.yaml

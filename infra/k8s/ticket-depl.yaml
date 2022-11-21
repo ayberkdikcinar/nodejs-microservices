@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ticket-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ticket
+  template:
+    metadata:
+      labels:
+        app: ticket
+    spec:
+      containers:
+        - name: ticket
+          image: ayberkdd/ticket
+          env:
+          - name: MONGO_URI
+            value: mongodb://ticket-mongo-srv:27017/ticket
+          - name: JWT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: jwtsecret
+                key: JWT_SECRET
+                optional: false 
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ticket-srv
+spec:
+  selector:
+    app: ticket
+  ports:
+    - name: ticket
+      protocol: TCP
+      port: 3000
+      targetPort: 3000
