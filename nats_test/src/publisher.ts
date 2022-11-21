@@ -1,5 +1,5 @@
-import nats, { Message, Stan } from "node-nats-streaming";
-
+import nats from "node-nats-streaming";
+import TicketCreatedPublisher from "./events/ticket-created-publisher";
 console.clear();
 
 const stan = nats.connect("ticketing", "abc", {
@@ -8,26 +8,10 @@ const stan = nats.connect("ticketing", "abc", {
 
 stan.on("connect", () => {
   console.log("publisher connected.");
-  const publisher = new Publisher(stan, "ticket:created");
-  publisher.publish({ id: "123", name: "test", data: "test" });
+  const publisher = new TicketCreatedPublisher(stan);
+  publisher.publish({ id: "123", title: "test", price: 5 });
 });
+
 stan.on("disconnect", () => {
   console.log("publisher disconnected.");
 });
-
-class Publisher {
-  private client: Stan;
-  subject: string;
-
-  constructor(client: Stan, subject: string) {
-    this.client = client;
-    this.subject = subject;
-  }
-
-  publish(data: any) {
-    const convertedData = JSON.stringify(data);
-    this.client.publish(this.subject, convertedData, () => {
-      console.log(`Event published to channel ${this.subject}`);
-    });
-  }
-}
