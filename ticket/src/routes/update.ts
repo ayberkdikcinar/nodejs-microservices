@@ -7,11 +7,12 @@ import {
   UnAuthorizedError,
 } from "@ayberkddtickets/common";
 import { Ticket } from "../models/ticket";
-
+import { natsClient } from "../services/nats-client";
+import { TicketUpdatedPublisher } from "../events/publishers/ticket-updated-publisher";
 const router = express.Router();
 
 router.put(
-  "/api/tickets:id",
+  "/api/tickets/:id",
   [
     body("title").not().isEmpty().withMessage("Title must be provided"),
     body("price")
@@ -21,9 +22,11 @@ router.put(
   ValidationHandler,
   requireAuth,
   async (req: Request, res: Response) => {
-    const { title, price } = req.body();
+    const { title, price } = req.body;
     const id = req.params.id;
+
     const ticket = await Ticket.findById(id);
+
     if (!ticket) {
       throw new NotFoundError();
     }
@@ -37,9 +40,14 @@ router.put(
     });
 
     await ticket.save();
-
+    await new TicketUpdatedPublisher(natsClient.instance).publish({
+      id: ticket.id,
+      title: ticket.title,
+      price: ticket.price,
+      userId: ticket.userId,
+    });
     res.send(ticket);
   }
 );
 
-export { router as CreateRouter };
+export { router as UpdateRouter };

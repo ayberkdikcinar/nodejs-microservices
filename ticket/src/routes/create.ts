@@ -2,7 +2,8 @@ import express, { Request, Response } from "express";
 import { body } from "express-validator";
 import { requireAuth, ValidationHandler } from "@ayberkddtickets/common";
 import { Ticket } from "../models/ticket";
-
+import { TicketCreatedPublisher } from "../events/publishers/ticket-created-publisher";
+import { natsClient } from "../services/nats-client";
 const router = express.Router();
 
 router.post(
@@ -16,13 +17,18 @@ router.post(
   ValidationHandler,
   requireAuth,
   async (req: Request, res: Response) => {
-    const { title, price } = req.body();
+    const { title, price } = req.body;
 
-    const ticket = Ticket.build({ title, price, userId: "sd" });
+    const ticket = Ticket.build({ title, price, userId: req.currentUser!.id });
     //TODO: validate the userId
     await ticket.save();
-
-    res.send(ticket);
+    await new TicketCreatedPublisher(natsClient.instance).publish({
+      id: ticket.id,
+      title: ticket.title,
+      price: ticket.price,
+      userId: ticket.userId,
+    });
+    res.status(201).send(ticket);
   }
 );
 
