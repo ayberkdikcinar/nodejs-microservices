@@ -6,12 +6,14 @@ import { Order } from "./order";
 interface TicketAttributes {
   title: string;
   price: number;
+  id: string;
 }
 
 //The properties that an Ticket Document has.
 export interface TicketDocument extends mongoose.Document {
   title: string;
   price: number;
+  version: number;
   isReserved(): Promise<boolean>;
 }
 
@@ -38,14 +40,17 @@ const TicketSchema = new mongoose.Schema(
       transform(doc, ret) {
         ret.id = ret._id;
         delete ret._id;
-        delete ret.__v;
       },
     },
   }
 );
 
 TicketSchema.statics.build = (attributes: TicketAttributes) => {
-  return new Ticket(attributes);
+  return new Ticket({
+    _id: attributes.id,
+    title: attributes.title,
+    price: attributes.price,
+  });
 };
 
 TicketSchema.methods.isReserved = async function () {

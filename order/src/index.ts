@@ -9,7 +9,8 @@ import { currentUser, NotFoundError } from "@ayberkddtickets/common";
 import { errorHandler } from "@ayberkddtickets/common";
 import cookieSession from "cookie-session";
 import { natsClient } from "./services/nats-client";
-
+import { TicketCreatedListener } from "./events/listeners/ticket-created-listener";
+import { TicketUpdatedListener } from "./events/listeners/ticket-updated-listener";
 const app = express();
 app.use(json());
 app.set("trust proxy", true);
@@ -54,6 +55,9 @@ const start = async () => {
     });
     process.on("SIGINT", () => natsClient.instance.close());
     process.on("SIGTERM", () => natsClient.instance.close());
+
+    new TicketCreatedListener(natsClient.instance).listen();
+    new TicketUpdatedListener(natsClient.instance).listen();
 
     await mongoose.connect(process.env.MONGO_URI);
     console.log("Db Connected.");

@@ -6,7 +6,8 @@ import {
 } from "@ayberkddtickets/common";
 import express, { Request, Response } from "express";
 import { Order } from "../models/order";
-
+import { OrderCancelledPublisher } from "../events//publishers/order-cancelled-publisher";
+import { natsClient } from "../services/nats-client";
 const router = express.Router();
 
 router.delete(
@@ -23,6 +24,18 @@ router.delete(
     }
     order.set({ status: OrderStatus.Canceled });
     await order.save();
+
+    new OrderCancelledPublisher(natsClient.instance).publish({
+      id: order.id,
+      status: order.status,
+      userId: order.userId,
+      expiresAt: order.expiresAt.toISOString(),
+      version: order.version,
+      ticket: {
+        id: order.ticket.id,
+        price: order.ticket.price,
+      },
+    });
     res.status(204).send(order);
   }
 );

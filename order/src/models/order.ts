@@ -1,6 +1,7 @@
-import mongoose from "mongoose";
-import { OrderStatus } from "../events/types/order-status";
+import mongoose, { version } from "mongoose";
+import { OrderStatus } from "@ayberkddtickets/common";
 import { TicketDocument } from "./ticket";
+import { updateIfCurrentPlugin } from "mongoose-update-if-current";
 //The properties that are required to create a new Order
 interface OrderAttributes {
   userId: string;
@@ -15,6 +16,7 @@ interface OrderDocument extends mongoose.Document {
   status: OrderStatus;
   expiresAt: Date;
   ticket: TicketDocument;
+  version: number;
 }
 
 //The properties that an Order Model has.
@@ -48,7 +50,6 @@ const orderSchema = new mongoose.Schema(
       transform(doc, ret) {
         ret.id = ret._id;
         delete ret._id;
-        delete ret.__v;
       },
     },
   }
@@ -58,6 +59,9 @@ export const Order = mongoose.model<OrderDocument, IOrder>(
   "Order",
   orderSchema
 );
+
+orderSchema.set("versionKey", "version");
+orderSchema.plugin(updateIfCurrentPlugin);
 
 orderSchema.statics.build = (attributes: OrderAttributes) => {
   return new Order(attributes);
