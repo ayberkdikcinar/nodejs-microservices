@@ -1,56 +1,55 @@
-import mongoose, { Schema, Document,model } from "mongoose";
+import mongoose, { Schema, Document, model } from "mongoose";
+import { updateIfCurrentPlugin } from "mongoose-update-if-current";
 
-
-const TicketSchema = new Schema({
+const TicketSchema = new Schema(
+  {
     title: {
-        type:String,
-        required:true,
+      type: String,
+      required: true,
     },
     price: {
-        type:Number,
-        required:true,
+      type: Number,
+      required: true,
     },
-    userId:{
-        type:String,
-        required:true,
-    }
-
-},{
-    timestamps:true,
+    userId: {
+      type: String,
+      required: true,
+    },
+  },
+  {
+    timestamps: true,
     toJSON: {
-    transform: function (doc, ret) {
-      ret.id = ret._id;
-      delete ret._id;
-      delete ret.__v;
-    }
-  }});
+      transform: function (doc, ret) {
+        ret.id = ret._id;
+        delete ret._id;
+      },
+    },
+  }
+);
 
-const build = (attr: ITicketAttr) =>{
-    return new Ticket(attr);
+const build = (attr: ITicketAttr) => {
+  return new Ticket(attr);
 };
-
+TicketSchema.set("versionKey", "version");
 TicketSchema.statics.build = build;
-
-
+TicketSchema.plugin(updateIfCurrentPlugin);
 interface ITicketAttr {
-    title: string;
-    price: number;
-    userId: string;
+  title: string;
+  price: number;
+  userId: string;
 }
 
-interface TicketDoc extends Document{
-    title: string;
-    price: number;
-    userId: string;
-    createdAt: Date;
-    updateAt: Date;
+interface TicketDoc extends Document {
+  title: string;
+  price: number;
+  userId: string;
+  createdAt: Date;
+  version: number;
 }
 interface ITicket extends mongoose.Model<TicketDoc> {
-    build(ticket:ITicketAttr): TicketDoc;
-
+  build(ticket: ITicketAttr): TicketDoc;
 }
 
+const Ticket = model<TicketDoc, ITicket>("Ticket", TicketSchema);
 
-const Ticket = model<TicketDoc,ITicket>('Ticket',TicketSchema);
-
-export {Ticket};
+export { Ticket };

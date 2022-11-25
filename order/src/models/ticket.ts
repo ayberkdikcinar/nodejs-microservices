@@ -1,7 +1,7 @@
 import { OrderStatus } from "@ayberkddtickets/common";
 import mongoose from "mongoose";
 import { Order } from "./order";
-
+import { updateIfCurrentPlugin } from "mongoose-update-if-current";
 //The properties that are required to create a new Ticket
 interface TicketAttributes {
   title: string;
@@ -20,6 +20,10 @@ export interface TicketDocument extends mongoose.Document {
 //The properties that an Ticket Model has.
 interface ITicket extends mongoose.Model<TicketDocument> {
   build(attr: TicketAttributes): TicketDocument;
+  findByIdAndPrevVersion(data: {
+    id: string;
+    version: number;
+  }): Promise<TicketDocument | null>;
 }
 
 const TicketSchema = new mongoose.Schema(
@@ -45,6 +49,15 @@ const TicketSchema = new mongoose.Schema(
   }
 );
 
+TicketSchema.set("versionKey", "version");
+TicketSchema.plugin(updateIfCurrentPlugin);
+
+TicketSchema.statics.findByIdAndPrevVersion = (data: {
+  id: string;
+  version: number;
+}) => {
+  return Ticket.findOne({ _id: data.id, version: data.version - 1 });
+};
 TicketSchema.statics.build = (attributes: TicketAttributes) => {
   return new Ticket({
     _id: attributes.id,

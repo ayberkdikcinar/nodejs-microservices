@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-depl
+spec:
+  selector:
+    matchLabels:
+      app: order
+  template:
+    metadata:
+      labels:
+        app: order
+    spec:
+      containers:
+      - name: order
+        image: ayberkdd/order
+        resources:
+          limits:
+            memory: 256Mi
+            cpu: 100m
+          requests:
+            memory: 128Mi
+            cpu: 100m
+        env:
+        - name: NATS_CLUSTER_ID
+          value: ticketing
+        - name: NATS_URI
+          value: http://nats-srv:4222
+        - name: NATS_CLIENT_ID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: MONGO_URI
+          value: mongodb://order-mongo-srv:27017/order
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: jwtsecret
+              key: JWT_SECRET
+              optional: false 
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-srv
+spec:
+  selector:
+    app: order
+  ports:
+  - name: order
+    protocol: TCP
+    port: 3000
+    targetPort: 3000

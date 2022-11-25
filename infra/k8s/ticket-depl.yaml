@@ -16,6 +16,14 @@ spec:
         - name: ticket
           image: ayberkdd/ticket
           env:
+          - name: NATS_CLUSTER_ID
+            value: ticketing
+          - name: NATS_URI
+            value: http://nats-srv:4222
+          - name: NATS_CLIENT_ID
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
           - name: MONGO_URI
             value: mongodb://ticket-mongo-srv:27017/ticket
           - name: JWT_SECRET
@@ -24,7 +32,6 @@ spec:
                 name: jwtsecret
                 key: JWT_SECRET
                 optional: false 
-
 ---
 apiVersion: v1
 kind: Service

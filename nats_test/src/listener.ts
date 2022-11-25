@@ -9,12 +9,13 @@ const stan = nats.connect("ticketing", randomBytes(4).toString("hex"), {
 
 stan.on("connect", () => {
   console.log("Connected");
-  new TicketCreatedListener(stan).listen();
-});
 
-stan.on("close", () => {
-  console.log("closed");
-  process.exit();
+  stan.on("close", () => {
+    console.log("closed");
+    process.exit();
+  });
+
+  new TicketCreatedListener(stan).listen();
 });
 
 process.on("SIGINT", () => stan.close());
