@@ -15,6 +15,9 @@ const TicketSchema = new Schema(
       type: String,
       required: true,
     },
+    orderId: {
+      type: String,
+    },
   },
   {
     timestamps: true,
@@ -45,6 +48,7 @@ interface TicketDoc extends Document {
   userId: string;
   createdAt: Date;
   version: number;
+  orderId?: string;
 }
 interface ITicket extends mongoose.Model<TicketDoc> {
   build(ticket: ITicketAttr): TicketDoc;

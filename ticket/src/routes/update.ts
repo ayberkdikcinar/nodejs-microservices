@@ -5,6 +5,7 @@ import {
   requireAuth,
   ValidationHandler,
   UnAuthorizedError,
+  BadRequestError,
 } from "@ayberkddtickets/common";
 import { Ticket } from "../models/ticket";
 import { natsClient } from "../services/nats-client";
@@ -30,6 +31,12 @@ router.put(
     if (!ticket) {
       throw new NotFoundError();
     }
+
+    if (ticket.orderId) {
+      throw new BadRequestError(
+        "ticket is already reserved, you can not update it now."
+      );
+    }
     if (ticket.userId !== req.currentUser!.id) {
       throw new UnAuthorizedError();
     }
@@ -46,6 +53,7 @@ router.put(
       price: ticket.price,
       userId: ticket.userId,
       version: ticket.version,
+      orderId: ticket.orderId,
     });
     res.send(ticket);
   }
