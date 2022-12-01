@@ -6,7 +6,7 @@ export class TicketUpdatedListener extends BaseListener<TicketEvent> {
   subject: Subject.TICKET_UPDATED = Subject.TICKET_UPDATED;
   queueGroupName = "orders-service";
   async onMessage(data: TicketEvent["data"], msg: Message) {
-    const { title, price } = data;
+    const { title, price, version } = data;
     const ticket = await Ticket.findByIdAndPrevVersion(data);
 
     if (!ticket) {
